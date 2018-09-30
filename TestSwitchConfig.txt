@@ -1,0 +1,428 @@
+version 16.1
+no service pad 
+service tcp-keepalives-out 
+service timestamps log datetime msec localtime show-timezone 
+service password-encryption 
+service sequence-numbers 
+no platform punt-keepalive disable-kernel-core 
+! 
+hostname TestSwitch
+! 
+! 
+vrf definition Mgmt-vrf 
+ ! 
+ address-family ipv4 
+ exit-address-family 
+ ! 
+ address-family ipv6 
+ exit-address-family 
+! 
+logging buffered 16000
+logging console warnings 
+! 
+aaa new-model 
+! 
+! 
+aaa group server tacacs+ Test
+ server-private 1.1.1.1 key 7 0123
+ server-private 3.3.3.3 key 7 0123
+! 
+aaa authentication login default group Test local 
+! 
+! 
+! 
+! 
+! 
+aaa session-id common 
+clock timezone UTC 1 0 
+switch 1 provision ws-c3850-48t 
+switch 2 provision ws-c3850-48t 
+! 
+! 
+! 
+! 
+! 
+! 
+! 
+ip name-server 3.3.3.3
+ip domain name hans.local
+no ip cef optimize neighbor resolution 
+! 
+! 
+! 
+! 
+vtp mode transparent 
+! 
+crypto pki trustpoint TP-self-signed-3522976312 
+ enrollment selfsigned 
+ subject-name cn=IOS-Self-Signed-Certificate-3522976312 
+ revocation-check none 
+ rsakeypair TP-self-signed-3522976312 
+! 
+! 
+crypto pki certificate chain TP-self-signed-3522976312 
+ certificate self-signed 01 
+  30820330 30820218 A0030201 02020101 300D0609 2A864886 F70D0101 05050030  
+  31312F30 2D060355 04031326 494F532D 53656C66 2D536967 6E65642D 43657274  
+  69666963 6174652D 33353232 39373633 3132301E 170D3138 30363038 31343436  
+  31395A17 0D323030 31303130 30303030 305A3031 312F302D 06035504 03132649  
+  4F532D53 656C662D 5369676E 65642D43 65727469 66696361 74652D33 35323239  
+  37363331 32308201 22300D06 092A8648 86F70D01 01010500 0382010F 00308201  
+  0A028201 0100938B 1DC637F8 D770A7AF 9685ADA5 3279A19E DD781349 68AEE5A2  
+  AB4D17BD C1FC1C5D F4D17EEA 351E432E B01BB1F2 DFFBC793 A0062E9E BA45B649  
+  DAFDD15B 1F4055CD 6EA8BFC7 8151C015 41AE9D9E B396E71B E5071CFC C910C3BC  
+  CDBF5C37 A5AF6EF9 FE4D1333 C555F5D7 B3D2B6B4 9802B7B5 783C9BE9 3640BAE9  
+  22B57AE5 9F684EC5 EE2DD489 BD257041 22273DDF 7441B6DC B3E4A691 56884E95  
+  EF7E4250 C0037D32 0FF270B0 9D243FBF 8CFCE449 44957D39 67CFAA16 3BFE0E3D  
+  F3A4BCBA 96754ACF 3B09DBCD EF7199BD 421DB596 17FE1CC2 C784D929 65F9BAEB  
+  DD4ABE34 8F86AE90 07362685 108CB620 3266B169 0BAFAD66 6FEA3A59 61FAB98F  
+  28C321A9 3CD30203 010001A3 53305130 0F060355 1D130101 FF040530 030101FF  
+  301F0603 551D2304 18301680 14A3A128 BBE927E2 6AA5906F 4CBB7130 DA04871A  
+  DB301D06 03551D0E 04160414 A3A128BB E927E26A A5906F4C BB7130DA 04871ADB  
+  300D0609 2A864886 F70D0101 05050003 82010100 7BC5E7B2 B1C7798F 49DA3996  
+  D906DC1D 7C8C6AD7 623BD8CC 044E9D17 84B39805 7C6C7981 15D41AE5 027CAC4B  
+  870E83E1 59A966CD 7C91B9B4 BB438089 CDF22364 A6E68442 309C8C27 93A68629  
+  0C9DFB92 C51073D4 BB898A08 FBD632D4 B6189C0A 0A50C515 260CC7EE 22EF17D3  
+  DA582A2F FA20445A 0E64B3B3 76A17FCC F902815C 7C0E037B 42212ED0 EE3E677B  
+  0E1159C9 4304EAE7 6BC980C8 1400053F E848AA33 E70B2B1F 0C8F37C0 64F9C820  
+  A42BDB6A D9722422 5018143D D70ED2EF BBBA0D78 B9DC7BBF 9ACD69C4 9F9FDC7B  
+  8E9B4C82 37C0F2EB 7C49615E 84E8020B ABFB5EA8 1EEE09D0 BFB6C8CC BF9D335A  
+  360264C1 F5F8E8E0 D95D74B2 DB4A299E F7CD4D72 
+   	quit 
+! 
+license boot level ipbasek9 
+diagnostic bootup level minimal 
+! 
+spanning-tree mode pvst+ 
+spanning-tree portfast default 
+spanning-tree portfast bpduguard default 
+spanning-tree extend system-id 
+!
+redundancy 
+ mode sso 
+! 
+! 
+vlan 10 
+ name Ten
+! 
+vlan 11
+ name Eleven
+! 
+vlan 12
+ name Twelfe
+! 
+vlan 13
+ name Thirteen
+! 
+class-map match-any system-cpp-police-topology-control 
+  description Topology control 
+class-map match-any system-cpp-police-sw-forward 
+  description Sw forwarding, SGT Cache Full, LOGGING 
+class-map match-any system-cpp-default 
+  description DHCP snooping, show forward and rest of traffic 
+class-map match-any system-cpp-police-sys-data 
+  description Learning cache ovfl, Crypto Control, Exception, EGR Exception, NFL SAMPLED DATA, Gold Pkt, RPF Failed 
+class-map match-any system-cpp-police-punt-webauth 
+  description Punt Webauth 
+class-map match-any system-cpp-police-forus 
+  description Forus Address resolution and Forus traffic 
+class-map match-any system-cpp-police-multicast-end-station 
+  description MCAST END STATION 
+class-map match-any system-cpp-police-multicast 
+  description Transit Traffic and MCAST Data 
+class-map match-any system-cpp-police-l2-control 
+  description L2 control 
+class-map match-any system-cpp-police-dot1x-auth 
+  description DOT1X Auth 
+class-map match-any system-cpp-police-data 
+  description ICMP_GEN and BROADCAST 
+class-map match-any system-cpp-police-control-low-priority 
+  description ICMP redirect and general punt 
+class-map match-any system-cpp-police-wireless-priority1 
+  description Wireless priority 1 
+class-map match-any system-cpp-police-wireless-priority2 
+  description Wireless priority 2 
+class-map match-any system-cpp-police-wireless-priority3-4-5 
+  description Wireless priority 3,4 and 5 
+class-map match-any non-client-nrt-class 
+class-map match-any system-cpp-police-routing-control 
+  description Routing control 
+class-map match-any system-cpp-police-protocol-snooping 
+  description Protocol snooping 
+! 
+policy-map port_child_policy 
+ class non-client-nrt-class 
+  bandwidth remaining ratio 10 
+policy-map system-cpp-policy 
+ class system-cpp-police-data 
+  police rate 200 pps 
+ class system-cpp-police-sys-data 
+  police rate 100 pps 
+ class system-cpp-police-sw-forward 
+  police rate 1000 pps 
+ class system-cpp-police-multicast 
+  police rate 500 pps 
+ class system-cpp-police-multicast-end-station 
+  police rate 2000 pps 
+ class system-cpp-police-punt-webauth 
+ class system-cpp-police-l2-control 
+ class system-cpp-police-routing-control 
+  police rate 1800 pps 
+ class system-cpp-police-control-low-priority 
+ class system-cpp-police-wireless-priority1 
+ class system-cpp-police-wireless-priority2 
+ class system-cpp-police-wireless-priority3-4-5 
+ class system-cpp-police-topology-control 
+ class system-cpp-police-dot1x-auth 
+ class system-cpp-police-protocol-snooping 
+ class system-cpp-police-forus 
+ class system-cpp-default 
+! 
+!  
+! 
+! 
+! 
+! 
+! 
+! 
+! 
+! 
+! 
+! 
+! 
+! 
+interface Port-channel1 
+ description TO
+ switchport mode trunk 
+ switchport nonegotiate 
+ spanning-tree portfast trunk 
+!
+interface Port-channel10 
+ description TO
+ switchport access vlan 10
+ switchport mode access 
+ no port-channel standalone-disable 
+ spanning-tree portfast 
+ 
+interface Port-channel11 
+ description TO
+ switchport access vlan 11
+ switchport mode access 
+ no port-channel standalone-disable 
+ spanning-tree bpdufilter enable 
+! 
+interface Port-channel12 
+ description TO
+ switchport access vlan 12
+ storm-control broadcast level 1
+ storm-control action trap 
+ no port-channel standalone-disable 
+ spanning-tree portfast 
+ 
+interface GigabitEthernet0/0 
+ vrf forwarding Mgmt-vrf 
+ no ip address 
+ no ip route-cache 
+ negotiation auto 
+! 
+interface GigabitEthernet1/0/1 
+ description TO
+ switchport access vlan 10
+ switchport mode access 
+ storm-control broadcast level 20.00 
+ storm-control action trap 
+ channel-group 10 mode active 
+! 
+interface GigabitEthernet1/0/2 
+ description TO
+ switchport access vlan 11
+ switchport mode access 
+ storm-control broadcast level 20.00 
+ storm-control action trap 
+ channel-group 11 mode active 
+! 
+interface GigabitEthernet1/0/3 
+ description TO
+ switchport access vlan 12
+ switchport mode access 
+ storm-control broadcast level 20.00 
+ storm-control action trap 
+ channel-group 12 mode active 
+! 
+
+interface GigabitEthernet1/0/23 
+ description TO
+ switchport access vlan 11
+ switchport mode access 
+  spanning-tree bpdufilter enable 
+! 
+interface GigabitEthernet1/0/24 
+ description TO
+ switchport access vlan 12
+ switchport mode access 
+  spanning-tree portfast 
+ 
+interface GigabitEthernet1/1/1 
+!
+interface GigabitEthernet1/1/2 
+ shutdown 
+! 
+interface GigabitEthernet1/1/3 
+ shutdown 
+! 
+interface GigabitEthernet1/1/4 
+! 
+interface TenGigabitEthernet1/1/1 
+ description TO
+ switchport mode trunk 
+ switchport nonegotiate 
+ channel-group 1 mode active 
+! 
+interface TenGigabitEthernet1/1/2 
+ shutdown 
+! 
+interface TenGigabitEthernet1/1/3 
+ shutdown 
+! 
+interface TenGigabitEthernet1/1/4 
+ shutdown 
+! 
+interface GigabitEthernet2/0/1 
+ description TO
+ switchport access vlan 10
+ switchport mode access 
+ storm-control broadcast level 20.00 
+ storm-control action trap 
+ channel-group 10 mode active 
+! 
+interface GigabitEthernet2/0/2 
+ description TO
+ switchport access vlan 11
+ switchport mode access 
+ channel-group 11 mode active 
+! 
+interface GigabitEthernet2/0/3 
+ description TO
+ switchport access vlan 12
+ switchport mode access 
+ channel-group 12 mode active 
+! 
+interface TenGigabitEthernet2/1/1 
+ description TO
+ switchport mode trunk 
+ switchport nonegotiate 
+ carrier-delay msec 200 
+ channel-group 1 mode active 
+! 
+interface Vlan1 
+ no ip address 
+ no ip route-cache 
+ shutdown 
+! 
+interface Vlan10
+ ip address 1.2.3.4 255.255.255.0
+ no ip route-cache 
+! 
+ip default-gateway 1.2.3.254
+ip forward-protocol nd 
+no ip http server 
+no ip http secure-server 
+! 
+! 
+ip access-list standard MGNT 
+ permit 6.6.0.0 0.0.255.255 
+ 
+ip access-list extended AutoQos-4.0-wlan-Acl-Bulk-Data 
+ permit tcp any any eq 22 
+ permit tcp any any eq 465 
+ permit tcp any any eq 143 
+ permit tcp any any eq 993 
+ permit tcp any any eq 995 
+ permit tcp any any eq 1914 
+ permit tcp any any eq ftp 
+ permit tcp any any eq ftp-data 
+ permit tcp any any eq smtp 
+ permit tcp any any eq pop3 
+ip access-list extended AutoQos-4.0-wlan-Acl-MultiEnhanced-Conf 
+ permit udp any any range 16384 32767 
+ permit tcp any any range 50000 59999 
+ip access-list extended AutoQos-4.0-wlan-Acl-Scavanger 
+ permit tcp any any range 2300 2400 
+ permit udp any any range 2300 2400 
+ permit tcp any any range 6881 6999 
+ permit tcp any any range 28800 29100 
+ permit tcp any any eq 1214 
+ permit udp any any eq 1214 
+ permit tcp any any eq 3689 
+ permit udp any any eq 3689 
+ permit tcp any any eq 11999 
+ip access-list extended AutoQos-4.0-wlan-Acl-Signaling 
+ permit tcp any any range 2000 2002 
+ permit tcp any any range 5060 5061 
+ permit udp any any range 5060 5061 
+ip access-list extended AutoQos-4.0-wlan-Acl-Transactional-Data 
+ permit tcp any any eq 443 
+ permit tcp any any eq 1521 
+ permit udp any any eq 1521 
+ permit tcp any any eq 1526 
+ permit udp any any eq 1526 
+ permit tcp any any eq 1575 
+ permit udp any any eq 1575 
+ permit tcp any any eq 1630 
+ permit udp any any eq 1630 
+ permit tcp any any eq 1527 
+ permit tcp any any eq 6200 
+ permit tcp any any eq 3389 
+ permit tcp any any eq 5985 
+ permit tcp any any eq 8080 
+! 
+logging host 5.5.5.5
+logging host 5.5.5.6
+! 
+control-plane 
+ service-policy input system-cpp-policy 
+! 
+!
+line con 0 
+ logging synchronous 
+ stopbits 1 
+line aux 0 
+ stopbits 1 
+line vty 0 4 
+ access-class MGNT in
+ exec-timeout 60 0 
+ logging synchronous 
+ transport input ssh 
+ transport output ssh 
+line vty 5 15 
+ access-class MGNT in  
+ exec-timeout 60 0 
+ logging synchronous 
+ transport input ssh 
+ transport output none 
+! 
+! 
+monitor session 1 source interface Gi1/0/1
+monitor session 1 destination interface Gi1/0/5
+ntp server 7.7.7.7
+!
+mac address-table notification mac-move 
+wsma agent exec 
+! 
+wsma agent config 
+! 
+wsma agent filesys 
+! 
+wsma agent notify 
+! 
+! 
+ap dot11 airtime-fairness policy-name Default 0 
+ap group default-group 
+ap hyperlocation ble-beacon 0 
+ap hyperlocation ble-beacon 1 
+ap hyperlocation ble-beacon 2 
+ap hyperlocation ble-beacon 3 
+ap hyperlocation ble-beacon 4 
+end 
+ 
+

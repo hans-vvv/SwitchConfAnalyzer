@@ -1,0 +1,118 @@
+# Access interface items
+switchport mode access
+switchport nonegotiate
+no cdp enable
+
+# Access interface items ignore
+description
+port-channel standalone-disable
+channel-group
+
+# Trunk interface items
+switchport mode trunk
+switchport nonegotiate
+
+# Trunk interface items ignore
+description
+
+# IP interface items
+no ip proxy arp
+no ip unreachable
+no ip redirects
+
+# IP interface items ignore
+description
+vrf forwarding
+ip address
+negotiation
+ip route-cache
+
+# Console
+logging synchronous
+stopbits 2
+
+# VTY
+access-class MGNT in
+exec-timeout 60 0
+logging synchronous
+transport input ssh
+transport output none
+
+# Global nested items ignore
+vrf definition Mgmt-vrf
+crypto
+policy-map
+class-map
+ip access-list extended
+control-plane
+redundancy
+interface
+wsma agent
+wsma profile
+archive
+banner login
+line con
+line aux
+line vty
+
+# Global items beginning ignore
+Building
+Current configuration
+running-config
+access-list
+diagnostic bootup
+end
+hostname
+ip route
+alias
+ap
+ip routing
+no ip cef optimize
+no platform punt-keepalive disable-kernel-core
+aaa session-id common
+ip multicast-routing
+!
+no errdisable detect
+license
+monitor session
+ip default-gateway
+
+# Global items subset ignore
+hw-switch switch
+switch provision
+
+# Global complaincy items
+no service pad
+service tcp-keepalives-in
+service tcp-keepalives-out
+service timestamps debug datetime msec localtime
+service timestamps log datetime msec
+service password-encryption
+service sequence-numbers
+no service dhcp
+logging buffered 4096
+logging console warnings
+aaa new-model
+aaa group server tacacs+ Test
+ server-private 1.1.1.1 key 7 0123
+ server-private 2.2.2.2 key 7 0132
+ aaa new model
+aaa authentication login default group Test local
+aaa authentication enable default group Test enable
+cdp run
+ip name-server 3.3.3.3
+ip domain name hans.local
+vtp mode transparent
+spanning-tree mode mst
+spanning-tree portfast bpduguard default
+spanning-tree portfast default
+spanning-tree extend system-id
+no ip http server
+no ip http secure-server
+ip ssh version 2
+logging host 5.5.5.5
+ntp server 7.7.7.7
+ip access-list standard MGNT 
+ permit 6.6.6.0 0.0.255.255
+version 16.3
+

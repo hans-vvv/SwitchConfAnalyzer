@@ -1,0 +1,87 @@
+################ Shutdown unused interfaces:
+interface GigabitEthernet1/1/1
+ shutdown
+!
+interface GigabitEthernet1/1/4
+ shutdown
+!
+!
+################ Configure access ports according template:
+interface Port-channel10
+switchport nonegotiate
+no cdp enable
+no spanning-tree portfast
+!
+interface Port-channel11
+switchport nonegotiate
+no cdp enable
+no spanning-tree bpdufilter enable
+!
+interface Port-channel12
+switchport mode access
+switchport nonegotiate
+no cdp enable
+no storm-control broadcast level 1
+no storm-control action trap
+no spanning-tree portfast
+!
+interface GigabitEthernet1/0/23
+switchport nonegotiate
+no cdp enable
+no spanning-tree bpdufilter enable
+!
+interface GigabitEthernet1/0/24
+switchport nonegotiate
+no cdp enable
+no spanning-tree portfast
+!
+!
+################ Configure trunk ports according template:
+interface Port-channel1
+no spanning-tree portfast trunk
+!
+!
+################ Configure IP ports according template:
+!
+################ Non compliant console items:
+no stopbits 1
+!
+################ Missing console items:
+stopbits 2
+!
+################ Non compliant VTY 0 4 items:
+no transport output ssh
+!
+################ Missing VTY 0 4 items:
+transport output none
+!
+################ Non compliant VTY 5 15 items:
+!
+################ Missing VTY 5 15 items:
+!
+################ Non compliant General items:
+no  permit 6.6.0.0 0.0.255.255
+no  server-private 3.3.3.3 key 7 0123
+no clock timezone UTC 1 0
+no ip forward-protocol nd
+no logging buffered 16000
+no logging host 5.5.5.6
+no mac address-table notification mac-move
+no service timestamps log datetime msec localtime show-timezone
+no spanning-tree mode pvst+
+no version 16.1
+!
+################ Missing General items:
+service tcp-keepalives-in
+service timestamps debug datetime msec localtime
+service timestamps log datetime msec
+no service dhcp
+logging buffered 4096
+ server-private 2.2.2.2 key 7 0132
+ aaa new model
+aaa authentication enable default group Test enable
+cdp run
+spanning-tree mode mst
+ip ssh version 2
+ permit 6.6.6.0 0.0.255.255
+version 16.3
