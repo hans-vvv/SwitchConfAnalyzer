@@ -33,6 +33,8 @@ def get_value(key, item): # key + value = item. Function returns value
     else:
         item = item.lstrip()
         result = re.search('^('+key+')(.*)', item)
+        #print(item)
+        #print(format(result.group(2)).lstrip())
         return format(result.group(2)).lstrip()
 
 
@@ -113,7 +115,7 @@ def get_Switch_info(Switchinfo, Vlans, Intfs, file_path):
                         founditem = False
                         for portkey in portkeys[i]:
                             if portkey in line:
-                                if 'Vlan1' in intf:
+                                if intf == 'interface Vlan1':
                                     founditem = True
                                     continue
                                 elif 'Vlan' in intf:
