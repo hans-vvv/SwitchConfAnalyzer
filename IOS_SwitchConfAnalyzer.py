@@ -33,8 +33,6 @@ def get_value(key, item): # key + value = item. Function returns value
     else:
         item = item.lstrip()
         result = re.search('^('+key+')(.*)', item)
-        #print(item)
-        #print(format(result.group(2)).lstrip())
         return format(result.group(2)).lstrip()
 
 
