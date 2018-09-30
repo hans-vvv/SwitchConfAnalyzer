@@ -2,9 +2,9 @@
 
 In my journey to gain experience in Network automation I have made a Python script to analyze IOS based multilayer switch configurations. The script has the following capabilities:
 
-1. It reads the configuration and store interface and vlan items which are written to an excel file. Using excel features like autofilter one could analyze the specific interface and vlan configuration parts of the switch. The interface items must be stored in an object in the script. If an item is not found in the object, but is found in the configuration, the script will print the missing item and you could update the object.
+1. It reads the configuration and store interface and vlan items, which are written to an excel file. Using excel features like autofilter you can analyze the specific interface and vlan configuration parts of the switch. The interface items must be stored in an object in the script. If an item is not found in the object, but is found in the configuration, the script will print the missing item and you can update the object.
 
-2. In a template file one can specify several items to which the configuration must comply. The following categories can be specified:
+2. In a template file you can specify several items to which the configuration must comply. The following categories can be specified:
 - Switchport access interfaces
 - Switchport trunk interfaces
 - IP interfaces
@@ -12,11 +12,11 @@ In my journey to gain experience in Network automation I have made a Python scri
 - Console lines
 - General configuration items
 
-There are some (hopefully) self explanatory filters in the template files available in order to determine which items are to skipped for comparison to the intended configuration. 
+There are some (hopefully) self explanatory filters in the template file available in order to determine which items are to be skipped for comparison with the intended configuration. 
 
 When you run the script you must select the configuration file via a file dialog. Within the same directory the template file must be present. If all goes well (...) then two files are returned, the excel files and a file with differences to the intended configuration.
 
-My biggest challenge to accomplish this result was to find a convenient way to store and structure the data. I found the defaultdict very helpfull because you can save items in a nested structure without having to initialize a dictionary. Futhermore I choose a structure which "look and feel" to the way you store data in an excel file. So for example if you want to retreive information about the description of interface Port-channel10 you can access the dictionary Switchinfo as follows:
+My biggest challenge to accomplish this result was to find a convenient way to store and structure the data. I found the defaultdict very helpfull because you can save items in a nested structure without having to initialize a dictionary. Futhermore I choose a structure with "look and feel" to the way you store data in an excel file. So for example if you want to retreive information about the description of interface Port-channel10 you can access the dictionary Switchinfo as follows:
 
 Switchinfo['portinfo']['interface Port-channel 10']['description']
 
