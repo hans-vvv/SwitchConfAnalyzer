@@ -351,10 +351,6 @@ def complaincy_report(Switchinfo, compl_template_file, file_path):
                             if items[0] == words[0]:
                                 skipline = True 
 
-                    match = re.search('^vlan (\d+)$', line)# hard code ignore vlan's to avoid messy problems
-                    if match:
-                        skipline = True
-
                 if line == '!':
                     scantransportlines = False
 
@@ -407,7 +403,11 @@ def complaincy_report(Switchinfo, compl_template_file, file_path):
                 non_complaint_items = list(set(config) - set(compl_template['glob']))
             print('################ Non compliant {} items:'.format(compl_type), file=res) 
             for item in sorted(non_complaint_items):
-                print('no ' + item, file=res)
+                words = item.split()
+                if words[0].lstrip() != 'no':
+                    print('no ' + item, file=res)
+                else:
+                    print(' '.join(words[1:]), file=res)
             print('!', file=res)
             print('################ Missing {} items:'.format(compl_type), file=res)
             if compl_type != 'General':

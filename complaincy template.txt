@@ -39,6 +39,7 @@ transport input ssh
 transport output none
 
 # Global nested items ignore
+vlan
 vrf definition Mgmt-vrf
 crypto
 policy-map
