@@ -147,6 +147,9 @@ def calc_vlan_use(Switchinfo, Vlans):
             if Switchinfo['portinfo'][intf].get('channel-group', '') == '': # Do not analyze member intf's of Port-ch's
                 if k == 'switchport access vlan':
                     used_vlans.append(Switchinfo['portinfo'][intf]['switchport access vlan'])
+    for vlan in Switchinfo['vlaninfo']: # Add Vlan if SVI exists
+        if Switchinfo['vlaninfo'][vlan].get('ip address', '') != '':
+            used_vlans.append(vlan)
 
     used_vlans = sorted(set(used_vlans))
     used_vlans.sort(key=int)
