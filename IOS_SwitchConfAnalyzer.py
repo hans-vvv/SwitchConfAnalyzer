@@ -36,7 +36,7 @@ def get_value(key, item): # key + value = item. Function returns value
         return format(result.group(2)).lstrip()
 
 
-def get_Switch_info(Switchinfo, Vlans, Intfs, file_path):
+def get_Switch_info(file_path):
 
     # key is number of words of configuration item. Words in list are key of item. Value to be calculated with get_value function.
     portkeys = { 1: ['switchport' , 'shutdown'] ,
@@ -44,7 +44,8 @@ def get_Switch_info(Switchinfo, Vlans, Intfs, file_path):
                  3: ['spanning-tree bpduguard' , 'switchport mode' , 'ip pim' , 'vrf forwarding', 'ip helper-address',
                     'carrier-delay', 'spanning-tree portfast', 'spanning-tree bpdufilter', 'storm-control action'] ,
                  4: ['switchport access vlan' , 'ip address' , 'channel-group', 'storm-control broadcast level', 
-                    'switchport voice vlan', 'mls qos trust','auto qos voip', 'switchport port-security'],
+                    'switchport voice vlan', 'mls qos trust','auto qos voip', 'switchport port-security',
+                     'ip access-group'],
                  5: [] , 6: [] ,
                  7: ['srr-queue bandwidth share', 'srr-queue bandwidth shape'] ,
                  8: [] , 9: [] , 10: [] }
@@ -52,6 +53,7 @@ def get_Switch_info(Switchinfo, Vlans, Intfs, file_path):
 
     Portinfo = defaultdict(dict)
     Vlaninfo = defaultdict(dict)
+    Switchinfo = defaultdict(dict)
     Intfs = []
     Vlans = []
 
@@ -136,7 +138,7 @@ def get_Switch_info(Switchinfo, Vlans, Intfs, file_path):
         Switchinfo['portinfo'] = Portinfo
         Switchinfo['vlaninfo'] = Vlaninfo
         Switchinfo['generalinfo']['hostname'] = hostname
-        return Switchinfo, Vlans, Intfs, file_path
+        return Switchinfo, Vlans, Intfs
 
 
 def calc_vlan_use(Switchinfo, Vlans):
@@ -231,7 +233,7 @@ def info_to_xls(Switchinfo, Vlans, Intfs, file_path):
     wb.save(Switchinfo['generalinfo']['hostname'] + '.xlsx')
 
 
-def complaincy_report(Switchinfo, compl_template_file, file_path):
+def add_interface_properties(Switchinfo):
 
     #Add interface properties (access, ip, trunk, unused) to Switchinfo object.
     for intf in Switchinfo['portinfo']:
@@ -254,8 +256,14 @@ def complaincy_report(Switchinfo, compl_template_file, file_path):
         elif Switchinfo['vlaninfo'][vlan].get('ip address', '') != '':
             Switchinfo['vlaninfo'][vlan]['mode'] = 'ip'
 
+    return Switchinfo
+    
+
+
+def read_complaincy_template(compl_template_file):
+
     #Read complaincy template and store in object.
-    compl_template = defaultdict(list)
+    compl_object = defaultdict(list)
     with open(compl_template_file, 'r') as lines:
         for line in lines:
             line = line.rstrip()
@@ -286,8 +294,13 @@ def complaincy_report(Switchinfo, compl_template_file, file_path):
                 elif line == '# Global items subset ignore':
                     scan_item = 'glob_subset_ign'
                 else:
-                   compl_template[scan_item].append(line) 
-                            
+                   compl_object[scan_item].append(line)
+
+    return compl_object
+
+
+def gen_intf_compl(Switchinfo, compl_object):
+
     # Open file to report complaincy results
     complaince_file = Switchinfo['generalinfo']['hostname']  + '-complaince-result.txt'
 
@@ -305,7 +318,7 @@ def complaincy_report(Switchinfo, compl_template_file, file_path):
 
         # Print access, trunk and IP complaincy reports.
         complaincy_intf_info = [('access', 'acc_intf_ign', 'acc_intf'), ('trunk', 'trk_intf_ign', 'trk_intf'),
-                           ('IP', 'ip_intf_ign', 'ip_intf')]
+                           ('ip', 'ip_intf_ign', 'ip_intf')]
 
         for intf_type, compl_intf_ign, compl_intf in complaincy_intf_info:
             print('!', file=res)
@@ -319,35 +332,81 @@ def complaincy_report(Switchinfo, compl_template_file, file_path):
                             for k,v in Switchinfo['portinfo'][intf].items():
                                 if intf_type == 'access':
                                     if k != 'mode' and k!= 'switchport access vlan':
-                                        if k not in compl_template[compl_intf_ign]:
-                                            found.append(k + ' ' + v)
+                                        if k not in compl_object[compl_intf_ign]:
+                                            v = v.lstrip()
+                                            v_list = v.split()
+                                            if k == v:
+                                                found.append(k)
+                                            elif k == ' '.join(v_list[1:]):
+                                                found.append(v)
+                                            else:
+                                                found.append(k + ' ' + v)
                                 else:
                                     if k != 'mode':
-                                       if k not in compl_template[compl_intf_ign]:
-                                            found.append(k + ' ' + v) 
-                            for item in compl_template[compl_intf]:
+                                       if k not in compl_object[compl_intf_ign]:
+                                            v = v.lstrip()
+                                            v_list = v.split()
+                                            if k == v:
+                                                found.append(k)
+                                            elif k == ' '.join(v_list[1:]):
+                                                found.append(v)
+                                            else:
+                                                found.append(k + ' ' + v)
+                                      
+                            for item in compl_object[compl_intf]:
                                 if item not in found:
                                     print(item, file=res)
                             for item in found:
-                                if item not in compl_template[compl_intf]:
+                                if item not in compl_object[compl_intf] and item not in compl_object[compl_intf_ign]:
                                     print('no ' + item, file=res)
-                            print('!', file=res) 
-        
+                            print('!', file=res)
+
+        for vlan in Switchinfo['vlaninfo']:
+            for k,v in Switchinfo['vlaninfo'][vlan].items():
+                if k == 'mode' and v == 'ip':
+                    print('interface Vlan' + vlan, file=res)
+                    found = []
+                    for k,v in Switchinfo['vlaninfo'][vlan].items():
+                        if k != 'mode' and k != 'name':
+                            if k not in compl_object['ip_intf_ign']:
+                                v = v.lstrip()
+                                value = v.split()
+                                if k == v:
+                                    found.append(k)
+                                elif k == ' '.join(value[1:]):
+                                    found.append(v)
+                                else:
+                                    found.append(k + ' ' + v)
+                    
+                    for item in compl_object['ip_intf']:
+                        if item not in found:
+                            print(item, file=res)
+                    for item in found:
+                        if item not in compl_object['ip_intf_ign'] and item not in compl_object['ip_intf']:
+                            print('no ' + item, file=res)
+                    print('!', file=res)
+                            
+
+                    
+    return complaince_file
+
+
+def gen_audit_config_con_vty(compl_object, file_path):
 
     # Read config and create list with selected (via template) config items. This list will be compared to
-    # items present in indented part of template. Differences are reported. Also VTY and console config
+    # items present in intended part of template. Differences are reported. Also VTY and console config
     # items are compared and reported.
     with open(file_path, 'r') as lines:
         skipline = False # If true, (nested) config part is ignored
         scantransportlines = False # if true console and VTY items are read from config
-        config = [] # Includes config items to be compared with indented items in template
-        transportlines = {}
+        audit_config = [] # Includes config items to be compared with intended items in template
+        transportlines = {} # Config from console and VTY lines
         for line in lines:
             if line.strip():
                 line = line.rstrip()
                 words = line.split()
                 
-                for item in compl_template['glob_nest_ign']:
+                for item in compl_object['glob_nest_ign']:
                     if item in line:
                         if line.strip():
                             items = item.split()
@@ -375,21 +434,23 @@ def complaincy_report(Switchinfo, compl_template_file, file_path):
                 if skipline:
                     if line == '!':
                         skipline = False
-                else: 
+                else:
                     filterline = False
-                    for item in compl_template['glob_begin_ign']:
+                    for item in compl_object['glob_begin_ign']:
                         result = re.search('^('+item+')*',line)
                         if result.group(0):
                             filterline = True
-                    for item in compl_template['glob_subset_ign']:
+                    for item in compl_object['glob_subset_ign']:
                         items = item.split()
                         if set(items).issubset(words):
                             filterline = True                          
                     if not filterline:
-                        config.append(line)
+                        audit_config.append(line)
 
-##        for configline in config: # Use to debug which config parts are filtered through configuration.
-##            print(configline)
+    return audit_config, transportlines
+
+
+def gen_general_con_vty(complaince_file, audit_config, compl_object, transportlines):
 
     with open(complaince_file, 'a') as res:
 
@@ -401,9 +462,9 @@ def complaincy_report(Switchinfo, compl_template_file, file_path):
             
             print('!', file=res)
             if compl_type != 'General':
-                non_complaint_items = list(set(transportlines[compl_line_type]) - set(compl_template[compl_template_type]))
+                non_complaint_items = list(set(transportlines[compl_line_type]) - set(compl_object[compl_template_type]))
             else:
-                non_complaint_items = list(set(config) - set(compl_template['glob']))
+                non_complaint_items = list(set(audit_config) - set(compl_object['glob']))
             print('################ Non compliant {} items:'.format(compl_type), file=res) 
             for item in sorted(non_complaint_items):
                 words = item.split()
@@ -414,12 +475,12 @@ def complaincy_report(Switchinfo, compl_template_file, file_path):
             print('!', file=res)
             print('################ Missing {} items:'.format(compl_type), file=res)
             if compl_type != 'General':
-                for item in compl_template[compl_template_type]:
+                for item in compl_object[compl_template_type]:
                     if item not in transportlines[compl_line_type]:
                         print(item, file=res)
             else:
-                for item in compl_template['glob']:
-                    if item not in config:
+                for item in compl_object['glob']:
+                    if item not in audit_config:
                         print(item, file=res)
 
 def main():
@@ -427,14 +488,21 @@ def main():
     root = tk.Tk()
     root.withdraw()
     file_path = filedialog.askopenfilename()
-    Switchinfo = defaultdict(dict)
-    Vlans = []
-    Intfs = []
-    Switchinfo, Vlans, Intfs, file_path = get_Switch_info(Switchinfo, Vlans, Intfs, file_path)
-      
+
+    Switchinfo, Vlans, Intfs = get_Switch_info(file_path)
+     
     info_to_xls(Switchinfo, Vlans, Intfs, file_path)
+    
+    add_interface_properties(Switchinfo)
+
     compl_template_file = 'complaincy template.txt'
-    complaincy_report(Switchinfo, compl_template_file, file_path)
+    compl_object = read_complaincy_template(compl_template_file)
+
+    complaince_file = gen_intf_compl(Switchinfo, compl_object)
+    
+    audit_config, transportlines = gen_audit_config_con_vty(compl_object, file_path)
+
+    gen_general_con_vty(complaince_file, audit_config, compl_object, transportlines)
 
 main()
     

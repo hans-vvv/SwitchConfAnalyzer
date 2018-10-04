@@ -26,9 +26,6 @@ no storm-control action trap
 no spanning-tree portfast
 !
 interface GigabitEthernet1/0/23
-switchport nonegotiate
-no cdp enable
-no spanning-tree bpdufilter enable
 !
 interface GigabitEthernet1/0/24
 switchport nonegotiate
@@ -41,7 +38,30 @@ interface Port-channel1
 no spanning-tree portfast trunk
 !
 !
-################ Configure IP ports according template:
+################ Configure ip ports according template:
+interface GigabitEthernet0/0
+no ip proxy arp
+no ip unreachable
+no ip redirects
+no cdp enable
+!
+interface Vlan10
+no ip unreachable
+no ip redirects
+no cdp enable
+!
+interface Vlan11
+no ip proxy arp
+no ip unreachable
+no cdp enable
+no ip access-group 10 in
+!
+interface Vlan1
+no ip proxy arp
+no ip unreachable
+no ip redirects
+no cdp enable
+!
 !
 ################ Non compliant console items:
 no stopbits 1

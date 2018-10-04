@@ -19,6 +19,7 @@ description
 no ip proxy arp
 no ip unreachable
 no ip redirects
+no cdp enable
 
 # IP interface items ignore
 description
@@ -52,8 +53,8 @@ wsma agent
 wsma profile
 archive
 banner login
-line con
 line aux
+line con
 line vty
 
 # Global items beginning ignore
