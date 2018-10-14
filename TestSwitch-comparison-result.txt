@@ -54,7 +54,6 @@ interface Vlan11
 no ip proxy arp
 no ip unreachable
 no cdp enable
-no ip access-group 10 in
 !
 interface Vlan1
 no ip proxy arp
@@ -62,26 +61,7 @@ no ip unreachable
 no ip redirects
 no cdp enable
 !
-!
-################ Non compliant console items:
-no stopbits 1
-!
-################ Missing console items:
-stopbits 2
-!
-################ Non compliant VTY 0 4 items:
-no transport output ssh
-!
-################ Missing VTY 0 4 items:
-transport output none
-!
-################ Non compliant VTY 5 15 items:
-!
-################ Missing VTY 5 15 items:
-!
 ################ Non compliant General items:
-no  permit 6.6.0.0 0.0.255.255
-no  server-private 3.3.3.3 key 7 0123
 no clock timezone UTC 1 0
 no ip forward-protocol nd
 no logging buffered 16000
@@ -89,19 +69,80 @@ no logging host 5.5.5.6
 no mac address-table notification mac-move
 no service timestamps log datetime msec localtime show-timezone
 no spanning-tree mode pvst+
-no version 16.1
 !
-################ Missing General items:
+################ Missing general template items:
 service tcp-keepalives-in
 service timestamps debug datetime msec localtime
 service timestamps log datetime msec
 no service dhcp
 logging buffered 4096
- server-private 2.2.2.2 key 7 0132
- aaa new model
 aaa authentication enable default group Test enable
 cdp run
 spanning-tree mode mst
 ip ssh version 2
+################ Non compliant hierarchical items:
+!
+Difference found in aaa group server tacacs+ Test.
+!
+Template configuration is:
+aaa group server tacacs+ Test
+ server-private 1.1.1.1 key 7 0123
+ server-private 2.2.2.2 key 7 0132
+!
+Switch configuration is:
+aaa group server tacacs+ Test
+ server-private 1.1.1.1 key 7 0123
+ server-private 3.3.3.3 key 7 0123
+!
+!
+!
+Difference found in ip access-list standard MGNT.
+!
+Template configuration is:
+ip access-list standard MGNT
  permit 6.6.6.0 0.0.255.255
-version 16.3
+!
+Switch configuration is:
+ip access-list standard MGNT
+ permit 6.6.0.0 0.0.255.255
+!
+!
+!
+Difference found in line con 0.
+!
+Template configuration is:
+line con 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+!
+Switch configuration is:
+line con 0
+ logging synchronous
+ stopbits 1
+!
+!
+!
+Difference found in line vty 0 4.
+!
+Template configuration is:
+line vty 0 4
+ access-class MGNT in
+ exec-timeout 60 0
+ logging synchronous
+ transport input ssh
+ transport output none
+!
+Switch configuration is:
+line vty 0 4
+ access-class MGNT in
+ exec-timeout 60 0
+ logging synchronous
+ transport input ssh
+ transport output ssh
+!
+!
+!
+!
+!
+!

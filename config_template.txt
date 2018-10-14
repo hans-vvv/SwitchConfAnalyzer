@@ -27,37 +27,11 @@ vrf forwarding
 ip address
 negotiation
 ip route-cache
+ip access-group
 
-# Console
-logging synchronous
-stopbits 2
-
-# VTY
-access-class MGNT in
-exec-timeout 60 0
-logging synchronous
-transport input ssh
-transport output none
-
-# Global nested items ignore
-vlan
-vrf definition Mgmt-vrf
-crypto
-policy-map
-class-map
-ip access-list extended
-control-plane
-redundancy
-interface
-wsma agent
-wsma profile
-archive
-banner login
-line aux
-line con
-line vty
 
 # Global items beginning ignore
+version
 Building
 Current configuration
 running-config
@@ -73,6 +47,7 @@ no ip cef optimize
 no platform punt-keepalive disable-kernel-core
 aaa session-id common
 ip multicast-routing
+wsma agent
 !
 no errdisable detect
 license
@@ -83,7 +58,7 @@ ip default-gateway
 hw-switch switch
 switch provision
 
-# Global complaincy items
+# Global config items
 no service pad
 service tcp-keepalives-in
 service tcp-keepalives-out
@@ -95,10 +70,6 @@ no service dhcp
 logging buffered 4096
 logging console warnings
 aaa new-model
-aaa group server tacacs+ Test
- server-private 1.1.1.1 key 7 0123
- server-private 2.2.2.2 key 7 0132
- aaa new model
 aaa authentication login default group Test local
 aaa authentication enable default group Test enable
 cdp run
@@ -114,7 +85,31 @@ no ip http secure-server
 ip ssh version 2
 logging host 5.5.5.5
 ntp server 7.7.7.7
+
+# Global hierarchical config items
 ip access-list standard MGNT 
  permit 6.6.6.0 0.0.255.255
-version 16.3
-
+!
+aaa group server tacacs+ Test
+ server-private 1.1.1.1 key 7 0123
+ server-private 2.2.2.2 key 7 0132
+!
+line con 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+!
+line vty 0 4
+ access-class MGNT in
+ exec-timeout 60 0
+ logging synchronous
+ transport input ssh
+ transport output none
+!
+line vty 5 15
+ access-class MGNT in
+ exec-timeout 60 0
+ logging synchronous
+ transport input ssh
+ transport output none
+!

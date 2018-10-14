@@ -203,7 +203,7 @@ interface Port-channel10
  switchport mode access 
  no port-channel standalone-disable 
  spanning-tree portfast 
- 
+! 
 interface Port-channel11 
  description TO
  switchport access vlan 11
@@ -263,7 +263,7 @@ interface GigabitEthernet1/0/24
  switchport access vlan 12
  switchport mode access 
   spanning-tree portfast 
- 
+! 
 interface GigabitEthernet1/1/1 
 !
 interface GigabitEthernet1/1/2 
@@ -389,7 +389,13 @@ logging host 5.5.5.6
 ! 
 control-plane 
  service-policy input system-cpp-policy 
-! 
+!
+banner login ^CC
+*******************************************************************************
+***            UNAUTHORIZED ACCESS TO THIS DEVICE IS PROHIBITED             ***
+*******************************************************************************
+^C
+!
 !
 line con 0 
  logging synchronous 
@@ -432,5 +438,3 @@ ap hyperlocation ble-beacon 2
 ap hyperlocation ble-beacon 3 
 ap hyperlocation ble-beacon 4 
 end 
- 
-
