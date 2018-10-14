@@ -23,7 +23,7 @@ The first key represent the tab which is present in the excel file. Using a simu
 
 The following caveats apply to the script:
 - No support for subinterfaces
-- No support for multiple values per unique key (for ex. sec     interfaces or vlan allow lists)
+- No support for multiple values per unique key (for ex. sec     IP addresses or vlan allow lists)
 - Script only analyze port-channel interfaces and not it's member interfaces
 
 
