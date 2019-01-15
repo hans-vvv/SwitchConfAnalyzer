@@ -2,7 +2,7 @@
 
 In my journey to gain experience in Network automation I have made a Python script to analyze IOS based multilayer switch configurations. The script has the following capabilities:
 
-1. It reads the configuration and store interface and vlan items, which are written to an excel file. Using excel features like autofilter you can analyze the specific interface and vlan configuration parts of the switch. The interface items must be stored in an object in the script. If an item is not found in the object, but is found in the configuration, the script will print the missing item and you can update the object.
+1. It reads the configuration and store interface and vlan items, which are written to an excel file. Using excel features like autofilter you can analyze the specific interface and vlan configuration parts of the switch. The interface items must be stored in an object in the script. If an item is not found in the object, but is found in the configuration, the script will print the missing item and you can update the object. As of January 2019 I have published an improved version of this functionality in a separate script, the SwitchInterfaceParser.
 
 2. In a template file you can specify several items to which the configuration must comply. The following categories can be specified:
 - Switchport access interfaces
