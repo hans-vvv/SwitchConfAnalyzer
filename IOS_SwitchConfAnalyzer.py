@@ -216,8 +216,8 @@ def get_switch_info(file_path):
             if match(r'^interface (Vlan(\d+))', line):
                 scanfile = True
                 portindex = format(match.group(1))
-                vlan = format(match.group(2))
-                vlaninfo[vlanindex]['vlanindex'] = vlan
+                vlanindex = format(match.group(2))
+                vlaninfo[vlanindex]['vlanindex'] = vlanindex
                 standby = []
                 ip_helper = []
 
