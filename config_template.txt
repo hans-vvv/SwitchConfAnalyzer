@@ -7,6 +7,7 @@ no cdp enable
 description
 port-channel standalone-disable
 channel-group
+shutdown
 
 # Trunk interface items
 switchport mode trunk
@@ -14,6 +15,7 @@ switchport nonegotiate
 
 # Trunk interface items ignore
 description
+shutdown
 
 # IP interface items
 no ip proxy arp
@@ -28,6 +30,7 @@ ip address
 negotiation
 ip route-cache
 ip access-group
+shutdown
 
 
 # Global items beginning ignore

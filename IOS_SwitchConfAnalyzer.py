@@ -102,7 +102,7 @@ def get_switch_info(file_path):
     """
 
     # Helper function
-    def store_intf_items(line, portinfo, vlan, intf):
+    def store_port_items(line, vlanindex, portindex):
 
         """
         This helper function stores interface items.
@@ -137,46 +137,47 @@ def get_switch_info(file_path):
         # 'Method 1'
         for key in portkey_exceptions:
             if key in line:
-                if 'Vlan' in intf:
-                    vlaninfo[vlan][key] = get_value(key, line)
+                if 'Vlan' in portindex:
+                    vlaninfo[vlanindex][key] = get_value(key, line)
                     found_item = True
                 else:
-                    portinfo[intf][key] = get_value(key, line)
+                    portinfo[portindex][key] = get_value(key, line)
                     found_item = True
 
         # 'Method 2'
         for key_length in portkeys:
-            if not found_item:
-                for item in portkeys[key_length]:
-                    if item not in line:
-                        continue
-                    key = get_key(line, key_length)
-                    if 'standby' in line:
-                        if 'Vlan' in intf:
-                            standby.append(get_value(key, line))
-                            vlaninfo[vlan]['standby'] = ','.join(standby)
-                            found_item = True
-                        else:
-                            standby.append(get_value(key, line))
-                            portinfo[intf]['standby'] = ','.join(standby)
-                            found_item = True
-                    elif 'ip helper-address' in line:
-                        if 'Vlan' in intf:
-                            ip_helper.append(get_value(key, line))
-                            helper = ','.join(ip_helper)
-                            vlaninfo[vlan]['ip helper-address'] = helper
-                            found_item = True
-                        else:
-                            ip_helper.append(get_value(key, line))
-                            helper = ','.join(ip_helper)
-                            portinfo[intf]['ip helper-address'] = helper
-                            found_item = True
-                    elif 'Vlan' in intf:
-                        vlaninfo[vlan][key] = get_value(key, line)
+            if found_item:
+                continue
+            for item in portkeys[key_length]:
+                if item not in line:
+                    continue
+                key = get_key(line, key_length)
+                if 'standby' in line:
+                    if 'Vlan' in portindex:
+                        standby.append(get_value(key, line))
+                        vlaninfo[vlanindex]['standby'] = ','.join(standby)
                         found_item = True
                     else:
-                        portinfo[intf][key] = get_value(key, line)
+                        standby.append(get_value(key, line))
+                        portinfo[portindex]['standby'] = ','.join(standby)
                         found_item = True
+                elif 'ip helper-address' in line:
+                    if 'Vlan' in portindex:
+                        ip_helper.append(get_value(key, line))
+                        helper = ','.join(ip_helper)
+                        vlaninfo[vlanindex]['ip helper-address'] = helper
+                        found_item = True
+                    else:
+                        ip_helper.append(get_value(key, line))
+                        helper = ','.join(ip_helper)
+                        portinfo[portindex]['ip helper-address'] = helper
+                        found_item = True
+                elif 'Vlan' in portindex:
+                    vlaninfo[vlanindex][key] = get_value(key, line)
+                    found_item = True
+                else:
+                    portinfo[portindex][key] = get_value(key, line)
+                    found_item = True
 
         # 'Method 3 or default method'
         if not found_item:
@@ -188,13 +189,12 @@ def get_switch_info(file_path):
                             vlan_allow_list.append(vlan_id)
                     else:
                         vlan_allow_list.append(raw_vlans)
-                portinfo[intf]['vlan_allow_list'] = ','.join(vlan_allow_list)
-            elif 'Vlan' in intf:
-                vlaninfo[vlan][key] = get_value(key, line)
+                portinfo[portindex]['vlan_allow_list'] = ','.join(vlan_allow_list)
+            elif 'Vlan' in portindex:
+                vlaninfo[vlanindex][key] = get_value(key, line)
             else:
-                portinfo[intf][key] = get_value(key, line)
+                portinfo[portindex][key] = get_value(key, line)
 
-        return portinfo
 
 
     # Start main part of function
@@ -203,9 +203,6 @@ def get_switch_info(file_path):
     portinfo = defaultdict(dict)
     vlaninfo = defaultdict(dict)
     scanfile = False
-
-    intfs = []
-    vlans = []
 
     match = ReSearcher()
 
@@ -216,140 +213,130 @@ def get_switch_info(file_path):
             line = line.rstrip()
             word = line.split()
 
-            if match(r'^interface Vlan(\d+)', line):
-                intf = format(match.group(0))
-                vlan = format(match.group(1))
-                #vlaninfo[vlan]['vlan_id'] = vlan
+            if match(r'^interface (Vlan(\d+))', line):
                 scanfile = True
+                portindex = format(match.group(1))
+                vlan = format(match.group(2))
+                vlaninfo[vlanindex]['vlanindex'] = vlan
+                standby = []
+                ip_helper = []
+
+            elif match(r'^interface (.*)', line):
+                scanfile = True
+                portindex = format(match.group(1))
+                portinfo[portindex]['portindex'] = portindex
+                vlan_allow_list = []
                 standby = []
                 ip_helper = []
 
             elif match(r'^vlan (\d+)\-(\d+)$', line):
+                scanfile = True
                 start_vlan = int(match.group(1))
                 stop_vlan = int(match.group(2))
                 for vlan in range(start_vlan, stop_vlan+1):
-                    #vlaninfo[str(vlan)]['vlan_id'] = str(vlan)
-                    vlans.append(str(vlan))
+                    vlaninfo[str(vlan)]['vlanindex'] = str(vlan)
 
             elif match(r'^vlan (\d+)$', line):
-                vlan = format(match.group(1))
-                #vlaninfo[vlan]['vlan_id'] = vlan
-                vlans.append(str(vlan))
-
-            elif match(r'^interface (.*)', line):
-                intf = format(match.group(1))
                 scanfile = True
-                vlan_allow_list = []
-                standby = []
-                ip_helper = []
-                intfs.append(intf)
+                vlanindex = format(match.group(1))
+                vlaninfo[vlanindex]['vlanindex'] = vlanindex
 
-            elif match(r'^ name (.*)', line):
-                vlaninfo[vlan]['name'] = format(match.group(1))
+            elif match(r'^ name (.*)', line) and scanfile:
+                vlaninfo[vlanindex]['name'] = format(match.group(1))
 
             elif match(r'^ no (.*)', line) and scanfile:
                 key = format(match.group(1))
                 value = format(match.group(0))
-                if 'Vlan' in intf:
-                    vlaninfo[vlan][key] = value
+                if 'Vlan' in portindex:
+                    vlaninfo[vlanindex][key] = value
                 else:
-                    portinfo[intf][key] = value
+                    portinfo[portindex][key] = value
 
             elif match(r'^hostname (.*)', line):
                 hostname = format(match.group(1))
 
-            elif match(r'^ip forward-protocol nd', line):
-                scanfile = False
-
-            elif match(r'^(ip classless|ip default-gateway)', line):
+            elif match(r'!$', line) and scanfile:
                 scanfile = False
 
             # interface items are stored with helper function
             elif match('^ .*', line) and scanfile:
-                store_intf_items(line, portinfo, vlan, intf)
+                store_port_items(line, vlanindex, portindex)
 
-
-        vlans = sorted(set(vlans))
-        vlans.sort(key=int)
-
+                
         switchinfo['portinfo'] = portinfo
         switchinfo['vlaninfo'] = vlaninfo
         switchinfo['generalinfo']['hostname'] = hostname
 
-
-    return switchinfo, vlans, intfs
-
+    return switchinfo
 
 
-def calc_vlan_use(switchinfo, vlans):
+def calc_vlan_use(switchinfo):
 
     """
     This function returns Vlan usage statistics of the switch.
     Helpfull if switch is true (stub) access switch.
     """
 
-    used_vlans = []
+    vlans = []
+    access_vlans = []
+    for vlan, vlanitems in switchinfo['vlaninfo'].items():
+        vlans.append(vlan)
 
     for port, portitems in switchinfo['portinfo'].items():
-        # Do not analyze member intf's of Port-ch's
-        if 'channel-group' in portitems.keys():
+        if portitems.get('switchport access vlan') is None:
             continue
-        if 'switchport access vlan' in portitems.keys():
-            used_vlans.append(portitems['switchport access vlan'])
+        vlan = portitems['switchport access vlan']
+        access_vlans.append(vlan)
+            
+    access_vlans = sorted(set(access_vlans), key=int)     
+    vlans = sorted(set(vlans), key=int)
+    diff = sorted(set(vlans).symmetric_difference(set(access_vlans)), key=int)
 
-    # Add Vlan if SVI exists
-    for vlan, vlanitems in switchinfo['vlaninfo'].items():
-        if vlanitems.get('ip address') is not None:
-            used_vlans.append(vlan)
-
-    used_vlans = sorted(set(used_vlans))
-    used_vlans.sort(key=int)
-    diff = sorted(set(vlans).symmetric_difference(set(used_vlans)))
-    diff.sort(key=int)
+    if '1' in diff:
+        diff.remove('1')
 
     result = []
 
     fmt1 = 'The following VLANs are present on the switch: '
-    fmt2 = "The following VLANs are present on all access ports and SVI's: "
+    fmt2 = "The following VLANs are present on all access ports: "
     fmt3 = 'The following VLANs are candidate to be removed: '
 
     result.append(fmt1 + ','.join(vlans))
-    result.append(fmt2 + ','.join(used_vlans))
+    result.append(fmt2 + ','.join(access_vlans))
     result.append(fmt3 + ','.join(diff))
 
     return result
 
 
 
-def info_to_xls(switchinfo, vlans, intfs):
+def info_to_xls(switchinfo):
 
     """
     Function print switchinfo object to excel file. The primary
     keys of switchinfo object are printed in seperated tabs.
     """
 
-    # Calculate list of keys to be present in Excel sheets
+    # Calculate list of port- and vlan keys
     vlankeys = []
     portkeys = []
-    for vlanid in vlans:
-        for vlanid in switchinfo['vlaninfo']:
-            for key in switchinfo['vlaninfo'][vlanid]:
-                vlankeys.append(key)
 
-    for intf in intfs:
-        for intf in switchinfo['portinfo']:
-            for key in switchinfo['portinfo'][intf]:
-                portkeys.append(key)
+    for vlan, vlanitems in switchinfo['vlaninfo'].items():
+        for key in vlanitems.keys():
+            vlankeys.append(key)
+
+    for port, portitems in switchinfo['portinfo'].items():
+        for key in portitems.keys():
+            portkeys.append(key)
 
     vlankeys = sorted(set(vlankeys))
     portkeys = sorted(set(portkeys))
     vlankeys.remove('name')
     portkeys.remove('description')
+    portkeys.remove('portindex')
+    vlankeys.remove('vlanindex')
     vlankeys.insert(0, 'name')
-    vlankeys.insert(0, 'vlan')
     portkeys.insert(0, 'description')
-    portkeys.insert(0, 'interface')
-
+    
     wb = Workbook()
     ws = wb.create_sheet("Vlaninfo", 0)
     ws = wb.create_sheet("Portinfo", 0)
@@ -357,33 +344,41 @@ def info_to_xls(switchinfo, vlans, intfs):
 
     ws = wb['Vlaninfo']
 
-    for count, vlanitem in enumerate(vlankeys):
-        ws[xlref(0, count)] = vlanitem
+    count_vlan_row = 0
+    ws[xlref(0, 0)] = 'vlan'
 
-    for count_row, vlan in enumerate(vlans):
-        for count_col, vlanitem in enumerate(vlankeys):
-            if count_col == 0:
-                ws[xlref(count_row+1, count_col)] = vlan
-            else:
-                item = switchinfo['vlaninfo'][vlan].get(vlanitem, '')
-                ws[xlref(count_row+1, count_col)] = item
+    for count, vlankey in enumerate(vlankeys):
+        ws[xlref(0, count+1)] = vlankey
+
+    for vlan, vlanitems in switchinfo['vlaninfo'].items():
+        ws[xlref(count_vlan_row+1, 0)] = vlan
+
+        for count_col, vlankey in enumerate(vlankeys):
+            value = vlanitems.get(vlankey, '')
+            ws[xlref(count_vlan_row+1, count_col+1)] = value
+        count_vlan_row += 1
+
 
     ws = wb['Portinfo']
 
-    for count, portitem in enumerate(portkeys):
-        ws[xlref(0, count)] = portitem
+    count_port_row = 0
+    ws[xlref(0, 0)] = 'interface'
 
-    for count_row, intf in enumerate(intfs):
-        for count_col, portitem in enumerate(portkeys):
-            if count_col == 0:
-                ws[xlref(count_row+1, count_col)] = intf
-            else:
-                item = switchinfo['portinfo'][intf].get(portitem, '')
-                ws[xlref(count_row+1, count_col)] = item
+    for count, portkey in enumerate(portkeys):
+        ws[xlref(0, count+1)] = portkey
+
+    for port, portitems in switchinfo['portinfo'].items():
+        ws[xlref(count_port_row+1, 0)] = port
+
+        for count_col, portkey in enumerate(portkeys):
+            value = portitems.get(portkey, '')
+            ws[xlref(count_port_row+1, count_col+1)] = value
+        count_port_row += 1
+
 
     ws = wb['Vlan_report']
 
-    for count, line in enumerate(calc_vlan_use(switchinfo, vlans)):
+    for count, line in enumerate(calc_vlan_use(switchinfo)):
         ws[xlref(count, 0)] = line
 
     wb.save(switchinfo['generalinfo']['hostname'] + '.xlsx')
@@ -429,7 +424,7 @@ def add_interface_properties(switchinfo):
             switchinfo['vlaninfo'][vlan]['mode'] = 'ip'
 
     return switchinfo
-
+    
 
 
 def read_config_template(config_template_file):
@@ -520,6 +515,7 @@ def gen_intf_comparison(switchinfo, template_dict):
         # Create config to shutdown interfaces if it has not been shutdown.
         print('################ Shutdown unused interfaces:', file=res)
         for port, portitems in switchinfo['portinfo'].items():
+
             if (portitems.get('mode') == 'unused'
                     and portitems.get('shutdown') != 'shutdown'):
 
@@ -553,6 +549,8 @@ def gen_intf_comparison(switchinfo, template_dict):
                     if k == 'switchport access vlan':
                         continue
                     if k == 'mode':
+                        continue
+                    if k == 'portindex':
                         continue
                     if k in template_dict[comparison_intf_ign]:
                         continue
@@ -590,6 +588,8 @@ def gen_intf_comparison(switchinfo, template_dict):
                 if k == 'name':
                     continue
                 if k == 'mode':
+                    continue
+                if k == 'vlanindex':
                     continue
                 if k in template_dict['ip_intf_ign']:
                     continue
@@ -817,10 +817,10 @@ def main():
 
     # Retrieve interface and vlan info from configuration file and store in
     # switchinfo object.
-    switchinfo, vlans, intfs = get_switch_info(file_path)
+    switchinfo = get_switch_info(file_path)
 
     # Print switchinfo object in excel file.
-    info_to_xls(switchinfo, vlans, intfs)
+    info_to_xls(switchinfo)
 
     # Add interface properties (access, trunk, IP, unused)
     add_interface_properties(switchinfo)
